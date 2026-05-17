@@ -8,6 +8,17 @@ BlueTeam AIO is a world-class, production-grade cybersecurity platform. It is th
 
 ---
 
+## 📥 Direct Downloads
+
+| Asset | Platform | Link |
+|---|---|---|
+| **Debian Package (.deb)** | Ubuntu / Debian / Kali | [**Download v1.3.0**](dist/blueteam-aio-1.3.0-amd64.deb?raw=true) |
+| **Universal Installer (.sh)** | All Linux Distros | [**Download Script**](install.sh?raw=true) |
+| **RPM Spec File (.spec)** | RHEL / Fedora / CentOS | [**Download Spec**](blueteam-aio.spec?raw=true) |
+| **Full Release (.zip)** | Source + Assets | [**Download Zip**](../../archive/refs/heads/main.zip) |
+
+---
+
 ## 🧩 The 26-Module Architecture
 
 BlueTeam AIO is built on a modular architecture where each component specializes in a specific domain of cybersecurity.
@@ -50,13 +61,22 @@ BlueTeam AIO is built on a modular architecture where each component specializes
 
 ## 🚀 Deployment & Installation
 
-BlueTeam AIO is designed for easy deployment across any Linux environment.
+### 1. Universal Install Script (Recommended)
+```bash
+wget https://raw.githubusercontent.com/masterfrequency/bluelinux/main/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
 
-### 📦 Installation Methods
-- **Universal Script**: `sudo ./install.sh` (Supports Ubuntu, Debian, Fedora, RHEL, Arch)
-- **Debian Package**: `sudo dpkg -i dist/blueteam-aio-1.3.0-amd64.deb`
-- **Containerized**: `docker-compose up -d`
-- **Cloud Native**: `kubectl apply -f k8s-deployment.yaml`
+### 2. Debian/Ubuntu Package
+```bash
+sudo dpkg -i dist/blueteam-aio-1.3.0-amd64.deb
+```
+
+### 3. Docker Deployment
+```bash
+docker-compose up -d
+```
 
 ---
 
