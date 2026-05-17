@@ -1,4 +1,7 @@
 # By🇭🇷PhonkAlphabet
+
+![BlueTeam AIO Social Preview](social-preview.jpg)
+
 # 🛡️ BlueTeam AIO - Ultimate Cybersecurity Command
 
 BlueTeam AIO is a production-grade, all-in-one cybersecurity platform designed for real-time threat detection, automated response, and comprehensive governance. It combines advanced kernel monitoring, AI-driven intelligence, and SOAR capabilities into a single, high-performance solution.
