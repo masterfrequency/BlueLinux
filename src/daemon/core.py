@@ -1,9 +1,8 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
 BlueTeam AIO — Core Daemon
-All 21 modules initialised and monitored in a single loop.
+All 26 modules initialised and monitored in a single loop.
 """
 import sys
 import os
@@ -57,7 +56,7 @@ logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger('blueteam-daemon')
 
 BANNER = r"""
-  ____  _            _____                          _    ___ ___
+  ____  _            _____                          _    ___ ___ 
  | __ )| |_   _  ___|_   _|__  __ _ _ __ ___      / \  |_ _/ _ \
  |  _ \| | | | |/ _ \ | |/ _ \/ _` | '_ ` _ \    / _ \  | | | | |
  | |_) | | |_| |  __/ | |  __/ (_| | | | | | |  / ___ \ | | |_| |
@@ -67,17 +66,19 @@ BANNER = r"""
 
 
 class BlueTeamDaemon:
-    """Orchestrates all 21 security modules in a continuous monitoring loop."""
+    """Orchestrates all 26 security modules in a continuous monitoring loop."""
 
     MODULE_NAMES = [
         "1_kernel", "2_memory", "3_network", "4_fim", "5_edr",
         "6_siem", "7_vuln", "8_ir", "9_sandbox", "10_hardening",
-        "11_cloud", "12_reporting", "13_ai", "14_updater", "15_forensics", "16_rbac", "17_stealth", "18_p2p", "19_purple", "20_sbom", "21_healing"
+        "11_cloud", "12_reporting", "13_ai", "14_updater", "15_forensics", 
+        "16_rbac", "17_stealth", "18_p2p", "19_purple", "20_sbom", 
+        "21_healing", "22_metrics", "23_tip", "24_soar", "25_compliance", "26_yara"
     ]
 
     def __init__(self):
         print(BANNER)
-        logger.info("Initialising BlueTeam AIO Daemon — 21 modules loading...")
+        logger.info("Initialising BlueTeam AIO Daemon — 26 modules loading...")
 
         self.kernel    = KernelSecurityModule()
         self.memory    = MemoryForensicsModule()
@@ -136,7 +137,7 @@ class BlueTeamDaemon:
             "26_yara":       self.yara,
         }
 
-        logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")
+        logger.info("All 26 modules initialised successfully.")
 
     def _collect_summaries(self) -> dict:
         """Collect get_summary() from every module, catching per-module errors."""

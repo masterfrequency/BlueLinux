@@ -1,15 +1,14 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
-Module 14: REST API Server with FastAPI
-Fixed: all broken method calls corrected; SSL cert path made configurable.
+BlueTeam AIO — REST API Server
+Exposing all 26 security modules via FastAPI.
 """
 import sys, os, json, logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from typing import Dict, Any
 from datetime import datetime
@@ -36,7 +35,7 @@ from modules.yara_scanner import YaraScannerModule
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
 app = FastAPI(title="BlueTeam AIO API", version="1.3.0",
-              description="Production-grade cybersecurity platform — 21 modules via REST")
+              description="Production-grade cybersecurity platform — 26 modules via REST")
 
 # Initialize all modules
 kernel = KernelSecurityModule()
@@ -79,7 +78,11 @@ async def dashboard():
             "hardening": hardening.get_summary(),
             "cloud": cloud.get_summary(),
             "reporting": reporting.get_summary(),
-            "ai": ai.get_summary()
+            "ai": ai.get_summary(),
+            "tip": tip.get_summary(),
+            "soar": soar.get_summary(),
+            "compliance": compliance.get_summary(),
+            "yara": yara_scan.get_summary()
         }
     }
 
@@ -89,7 +92,6 @@ async def kernel_rootkits():
 
 @app.get("/api/memory/anomalies")
 async def memory_anomalies():
-    # Fixed: correct method is analyze_memory_anomalies
     return {"anomalies": memory.analyze_memory_anomalies()}
 
 @app.get("/api/network/connections")
@@ -98,7 +100,6 @@ async def network_connections():
 
 @app.get("/api/fim/ransomware")
 async def fim_ransomware():
-    # Fixed: analyze_entropy does not exist; correct method is detect_ransomware_behavior
     return {"indicators": fim.detect_ransomware_behavior()}
 
 @app.get("/api/edr/processes")
@@ -107,13 +108,11 @@ async def edr_processes():
 
 @app.get("/api/siem/events")
 async def siem_events():
-    # Fixed: get_recent_events does not exist; correct method is collect_logs
     logs = siem.collect_logs(limit=100)
     return {"events": logs, "count": len(logs)}
 
 @app.get("/api/vuln/scan")
 async def vuln_scan():
-    # Fixed: scan_system does not exist; aggregate individual scan methods
     return {
         "kernel_cves":   vuln.scan_kernel_cves(),
         "package_cves":  vuln.scan_package_cves(),
@@ -156,7 +155,6 @@ async def ai_query(q: str):
 
 @app.get("/metrics")
 async def get_metrics():
-    from fastapi.responses import Response
     return Response(content=metrics.export_prometheus_format(), media_type="text/plain")
 
 @app.get("/api/tip/summary")
@@ -235,7 +233,12 @@ async def docs():
             "/api/cloud/containers",
             "/api/reporting/compliance",
             "/api/ai/analyze",
-            "/api/ai/query"
+            "/api/ai/query",
+            "/metrics",
+            "/api/tip/summary",
+            "/api/soar/summary",
+            "/api/compliance/summary",
+            "/api/yara/summary"
         ]
     }
 
@@ -249,6 +252,7 @@ if __name__ == "__main__":
         logger.info("Starting BlueTeam AIO API on https://0.0.0.0:8443")
     else:
         logger.warning("SSL certs not found — starting on http://0.0.0.0:8443 (dev mode)")
+    
     # Serve Web UI
     web_dir = os.path.join(os.path.dirname(__file__), "..", "ui", "web")
     if os.path.exists(web_dir):
