@@ -35,6 +35,7 @@ from modules.purple_team import PurpleTeamModule
 from modules.sbom_monitor import SBOMMonitorModule
 from modules.self_healing import SelfHealingModule
 from modules.metrics import MetricsModule
+from modules.tip_integration import TIPIntegrationModule
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -96,6 +97,7 @@ class BlueTeamDaemon:
         self.sbom      = SBOMMonitorModule()
         self.healing   = SelfHealingModule()
         self.metrics   = MetricsModule()
+        self.tip       = TIPIntegrationModule()
 
         # Map module keys to instances for clean iteration
         self._modules = {
@@ -121,6 +123,7 @@ class BlueTeamDaemon:
             "20_sbom":      self.sbom,
             "21_healing":   self.healing,
             "22_metrics":   self.metrics,
+            "23_tip":       self.tip,
         }
 
         logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")
@@ -145,6 +148,10 @@ class BlueTeamDaemon:
         while True:
             try:
                 cycle += 1
+                # Periodic TIP Sync
+                if cycle % 60 == 0: # Every 60 cycles
+                    self.tip.fetch_external_iocs()
+
                 data = {
                     "cycle":     cycle,
                     "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),

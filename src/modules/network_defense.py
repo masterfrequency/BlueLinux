@@ -103,7 +103,7 @@ class NetworkDefenseModule:
         
         return connections
     
-    def detect_c2_communication(self) -> List[Dict[str, Any]]:
+    def detect_c2_communication(self, tip_module=None) -> List[Dict[str, Any]]:
         """Detect C2 communication patterns"""
         c2_alerts = []
         connections = self.get_active_connections()
@@ -114,6 +114,18 @@ class NetworkDefenseModule:
                 remote_ip = conn.get('remote_ip', '')
                 process = conn.get('process', '')
                 
+                # Check against TIP ingested IOCs
+                if tip_module and tip_module.check_ioc("ips", remote_ip):
+                    c2_alerts.append({
+                        "type": "known_malicious_ip",
+                        "pid": conn["pid"],
+                        "process": process,
+                        "remote": f"{remote_ip}:{remote_port}",
+                        "severity": "critical",
+                        "description": f"Connection to known malicious IP {remote_ip} (from TIP)",
+                        "timestamp": datetime.now().isoformat()
+                    })
+
                 # Check for suspicious ports
                 if remote_port in self.c2_signatures["suspicious_ports"]:
                     c2_alerts.append({

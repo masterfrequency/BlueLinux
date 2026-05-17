@@ -27,6 +27,7 @@ from modules.cloud_container import CloudContainerSecurity
 from modules.reporting import ReportingCompliance
 from modules.ai_gguf import AIGGUFModule
 from modules.metrics import MetricsModule
+from modules.tip_integration import TIPIntegrationModule
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
@@ -48,6 +49,7 @@ cloud = CloudContainerSecurity()
 reporting = ReportingCompliance()
 ai = AIGGUFModule()
 metrics = MetricsModule()
+tip = TIPIntegrationModule()
 
 @app.get("/health")
 async def health():
@@ -149,6 +151,14 @@ async def ai_query(q: str):
 async def get_metrics():
     from fastapi.responses import Response
     return Response(content=metrics.export_prometheus_format(), media_type="text/plain")
+
+@app.get("/api/tip/summary")
+async def tip_summary():
+    return tip.get_summary()
+
+@app.post("/api/tip/sync")
+async def tip_sync():
+    return tip.fetch_external_iocs()
 
 @app.post("/api/ai/action")
 async def ai_action(request: Request):
