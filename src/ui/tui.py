@@ -386,6 +386,12 @@ class BlueTeamTUI:
             "12": self.show_cloud_module,
             "13": self.show_reporting_module,
             "14": self.show_ai_module,
+            "15": self.show_rbac_module,
+            "16": self.show_stealth_module,
+            "17": self.show_p2p_module,
+            "18": self.show_purple_module,
+            "19": self.show_sbom_module,
+            "20": self.show_healing_module,
         }
         while True:
             self.clear_screen()
