@@ -1,3 +1,4 @@
+# By🇭🇷PhonkAlphabet
 #!/bin/bash
 # BlueTeam AIO - Universal Linux Installer
 # By🇭🇷PhonkAlphabet

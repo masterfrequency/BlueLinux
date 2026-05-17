@@ -1,4 +1,5 @@
 # By🇭🇷PhonkAlphabet
+# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """Module 7: Vulnerability & Misconfiguration Manager"""
 import subprocess, json, logging, re

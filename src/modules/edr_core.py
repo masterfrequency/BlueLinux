@@ -1,4 +1,5 @@
 # By🇭🇷PhonkAlphabet
+# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """Module 5: EDR Core with Sigma rules and MITRE ATT&CK mapping"""
 import subprocess, json, logging, re

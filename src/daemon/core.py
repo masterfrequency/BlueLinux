@@ -1,4 +1,5 @@
 # By🇭🇷PhonkAlphabet
+# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
 BlueTeam AIO — Core Daemon
