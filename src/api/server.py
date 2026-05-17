@@ -26,6 +26,7 @@ from modules.hardening import HardeningModule
 from modules.cloud_container import CloudContainerSecurity
 from modules.reporting import ReportingCompliance
 from modules.ai_gguf import AIGGUFModule
+from modules.metrics import MetricsModule
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
@@ -46,6 +47,7 @@ hardening = HardeningModule()
 cloud = CloudContainerSecurity()
 reporting = ReportingCompliance()
 ai = AIGGUFModule()
+metrics = MetricsModule()
 
 @app.get("/health")
 async def health():
@@ -142,6 +144,11 @@ async def ai_analyze(threat_type: str = "ransomware", threat_id: str = "auto"):
 @app.get("/api/ai/query")
 async def ai_query(q: str):
     return ai.natural_language_query(q)
+
+@app.get("/metrics")
+async def get_metrics():
+    from fastapi.responses import Response
+    return Response(content=metrics.export_prometheus_format(), media_type="text/plain")
 
 @app.post("/api/ai/action")
 async def ai_action(request: Request):

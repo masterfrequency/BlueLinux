@@ -34,11 +34,21 @@ from modules.p2p_mesh import P2PMeshModule
 from modules.purple_team import PurpleTeamModule
 from modules.sbom_monitor import SBOMMonitorModule
 from modules.self_healing import SelfHealingModule
+from modules.metrics import MetricsModule
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(name)s: %(message)s',
-)
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+        }
+        return json.dumps(log_record)
+
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger('blueteam-daemon')
 
 BANNER = r"""
@@ -85,6 +95,7 @@ class BlueTeamDaemon:
         self.purple    = PurpleTeamModule()
         self.sbom      = SBOMMonitorModule()
         self.healing   = SelfHealingModule()
+        self.metrics   = MetricsModule()
 
         # Map module keys to instances for clean iteration
         self._modules = {
@@ -109,6 +120,7 @@ class BlueTeamDaemon:
             "19_purple":    self.purple,
             "20_sbom":      self.sbom,
             "21_healing":   self.healing,
+            "22_metrics":   self.metrics,
         }
 
         logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")
