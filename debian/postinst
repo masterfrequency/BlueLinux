@@ -1,0 +1,38 @@
+# By🇭🇷PhonkAlphabet
+#!/bin/bash
+set -e
+
+# Create service user
+useradd -r -s /bin/false blueteam 2>/dev/null || true
+
+# Create directories
+mkdir -p /etc/blueteam-aio/ebpf
+mkdir -p /var/lib/blueteam-aio/models
+mkdir -p /var/lib/blueteam-aio/deception
+mkdir -p /var/log/blueteam-aio
+
+# Set permissions
+chown -R blueteam:blueteam /var/lib/blueteam-aio
+chown -R blueteam:blueteam /var/log/blueteam-aio
+chown -R blueteam:blueteam /etc/blueteam-aio
+chmod 750 /var/lib/blueteam-aio
+chmod 750 /var/log/blueteam-aio
+
+# Post-install hardening (CIS-based sysctl)
+cat > /etc/sysctl.d/99-blueteam-hardening.conf << 'EOF'
+kernel.kptr_restrict=2
+kernel.dmesg_restrict=1
+kernel.perf_event_paranoid=3
+kernel.yama.ptrace_scope=2
+net.ipv4.conf.all.rp_filter=1
+net.ipv4.conf.all.accept_source_route=0
+net.ipv4.conf.all.log_martians=1
+EOF
+sysctl -p /etc/sysctl.d/99-blueteam-hardening.conf || true
+
+# Enable and start service
+systemctl daemon-reload
+systemctl enable blueteam-aio.service
+systemctl start blueteam-aio.service
+
+echo "BlueTeam AIO installed successfully"

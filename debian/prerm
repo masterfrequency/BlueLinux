@@ -1,0 +1,5 @@
+# By🇭🇷PhonkAlphabet
+#!/bin/bash
+set -e
+systemctl stop blueteam-aio.service || true
+systemctl disable blueteam-aio.service || true

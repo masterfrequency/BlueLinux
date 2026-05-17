@@ -1,0 +1,16 @@
+# By🇭🇷PhonkAlphabet
+[Unit]
+Description=BlueTeam AIO Security Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=blueteam
+ExecStart=/usr/bin/python3 /opt/blueteam-aio/src/daemon/core.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
