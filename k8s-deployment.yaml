@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blueteam-aio
+  labels:
+    app: blueteam-aio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blueteam-aio
+  template:
+    metadata:
+      labels:
+        app: blueteam-aio
+    spec:
+      hostNetwork: true
+      containers:
+      - name: blueteam-aio
+        image: masterfrequency/blueteam-aio:latest
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: modules
+          mountPath: /lib/modules
+          readOnly: true
+        - name: src
+          mountPath: /usr/src
+          readOnly: true
+        - name: config
+          mountPath: /etc/blueteam-aio
+      volumes:
+      - name: modules
+        hostPath:
+          path: /lib/modules
+      - name: src
+        hostPath:
+          path: /usr/src
+      - name: config
+        hostPath:
+          path: /etc/blueteam-aio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blueteam-aio-service
+spec:
+  selector:
+    app: blueteam-aio
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+  type: NodePort

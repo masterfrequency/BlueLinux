@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  blueteam-aio:
+    build: .
+    container_name: blueteam-aio
+    privileged: true # Required for eBPF and kernel monitoring
+    network_mode: host # Required for network defense and ARP monitoring
+    volumes:
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      - /etc/blueteam-aio:/etc/blueteam-aio
+      - /var/log/blueteam-aio:/var/log/blueteam-aio
+      - /var/lib/blueteam-aio:/var/lib/blueteam-aio
+    ports:
+      - "8443:8443"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
