@@ -29,6 +29,8 @@ class DeceptionModule:
             "fake_ssh": {"port": 2222, "status": "running", "type": "container"},
             "fake_web": {"port": 8080, "status": "running", "type": "container"}
         }
+        self.honey_users = ["admin_backup", "db_sync_user"]
+        self.honey_processes = ["backup_agent", "cloud_sync"]
         
         for name, content in tokens_to_deploy.items():
             path = os.path.join(self.honeypot_dir, name)
@@ -47,10 +49,31 @@ class DeceptionModule:
                 pass
         return alerts
 
+    def detect_honey_user_activity(self) -> List[Dict]:
+        """Detect activity from honey-users."""
+        alerts = []
+        try:
+            import subprocess
+            # Check for logins from honey-users
+            result = subprocess.run(['last', '-n', '10'], capture_output=True, text=True)
+            for user in self.honey_users:
+                if user in result.stdout:
+                    alerts.append({
+                        "type": "honey_user_activity",
+                        "user": user,
+                        "severity": "critical",
+                        "description": f"Activity detected from honey-user: {user}",
+                        "timestamp": datetime.now().isoformat()
+                    })
+        except:
+            pass
+        return alerts
+
     def get_summary(self) -> Dict:
         return {
             "module": "Advanced Deception",
             "tokens_deployed": len(self.tokens),
+            "honey_users": len(self.honey_users),
             "high_interaction_honeypots": len(self.high_interaction_honeypots),
             "honeypot_dir": self.honeypot_dir,
             "timestamp": datetime.now().isoformat()

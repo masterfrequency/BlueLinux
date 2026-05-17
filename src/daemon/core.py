@@ -38,6 +38,7 @@ from modules.metrics import MetricsModule
 from modules.tip_integration import TIPIntegrationModule
 from modules.soar_orchestrator import SOAROrchestrator
 from modules.compliance_audit import ComplianceAuditModule
+from modules.yara_scanner import YaraScannerModule
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -102,6 +103,7 @@ class BlueTeamDaemon:
         self.tip       = TIPIntegrationModule()
         self.soar      = SOAROrchestrator(daemon_ref=self)
         self.compliance = ComplianceAuditModule()
+        self.yara      = YaraScannerModule()
 
         # Map module keys to instances for clean iteration
         self._modules = {
@@ -130,6 +132,7 @@ class BlueTeamDaemon:
             "23_tip":       self.tip,
             "24_soar":      self.soar,
             "25_compliance": self.compliance,
+            "26_yara":       self.yara,
         }
 
         logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")

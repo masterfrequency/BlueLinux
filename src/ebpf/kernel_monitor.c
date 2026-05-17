@@ -82,3 +82,16 @@ TRACEPOINT_PROBE(syscalls, sys_enter_mmap) {
     }
     return 0;
 }
+
+// Trace ptrace syscall (process injection)
+TRACEPOINT_PROBE(syscalls, sys_enter_ptrace) {
+    struct event_t event = {};
+    event.pid = bpf_get_current_pid_tgid() >> 32;
+    event.uid = bpf_get_current_uid_gid() & 0xFFFFFFFF;
+    event.timestamp = bpf_ktime_get_ns();
+    event.event_type = 5;  // ptrace injection
+    
+    bpf_get_current_comm(&event.comm, sizeof(event.comm));
+    events.perf_submit(ctx, &event, sizeof(event));
+    return 0;
+}

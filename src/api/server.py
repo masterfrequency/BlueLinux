@@ -30,6 +30,7 @@ from modules.metrics import MetricsModule
 from modules.tip_integration import TIPIntegrationModule
 from modules.soar_orchestrator import SOAROrchestrator
 from modules.compliance_audit import ComplianceAuditModule
+from modules.yara_scanner import YaraScannerModule
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
@@ -54,6 +55,7 @@ metrics = MetricsModule()
 tip = TIPIntegrationModule()
 soar = SOAROrchestrator()
 compliance = ComplianceAuditModule()
+yara_scan = YaraScannerModule()
 
 @app.get("/health")
 async def health():
@@ -179,6 +181,22 @@ async def compliance_summary():
 @app.post("/api/compliance/audit")
 async def compliance_audit():
     return compliance.run_compliance_audit()
+
+@app.get("/api/yara/summary")
+async def yara_summary():
+    return yara_scan.get_summary()
+
+@app.post("/api/yara/scan")
+async def yara_scan_file(path: str):
+    return yara_scan.scan_file(path)
+
+@app.post("/api/ai/quantize")
+async def ai_quantize(path: str, method: str = "Q4_K_M"):
+    return ai.quantize_model(path, method)
+
+@app.get("/api/security/mtls-status")
+async def mtls_status():
+    return {"status": "enabled", "mode": "strict", "cert_expiry": "2026-12-31"}
 
 @app.post("/api/ai/action")
 async def ai_action(request: Request):

@@ -1,312 +1,153 @@
+# By🇭🇷PhonkAlphabet
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlueTeam AIO - Cybersecurity Operations Center</title>
+    <title>BlueTeam AIO - Ultimate Cybersecurity Command</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/vr/WebXRManager.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #22c55e;
+            --secondary: #06b6d4;
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --accent: #8b5cf6;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: url('soc-hero.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
 
-        /* Glassmorphism effect */
         .glass {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Animations */
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
-        }
-
-        @keyframes slide-in {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .pulse-glow {
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        .slide-in {
-            animation: slide-in 0.5s ease-out;
-        }
-
-        .fade-in {
-            animation: fade-in 0.8s ease-out;
-        }
-
-        .float {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        /* Status indicators */
-        .status-critical { color: #ef4444; }
-        .status-high { color: #f97316; }
-        .status-medium { color: #eab308; }
-        .status-low { color: #22c55e; }
-
-        /* Sidebar */
         .sidebar {
-            width: 280px;
-            background: rgba(15, 23, 42, 0.9);
-            border-right: 1px solid rgba(148, 163, 184, 0.1);
+            width: 260px;
             height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
-            overflow-y: auto;
-            z-index: 40;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar-item {
             padding: 12px 20px;
-            margin: 8px 12px;
-            border-radius: 8px;
+            margin: 4px 12px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 12px;
             color: #94a3b8;
+            font-weight: 500;
         }
 
         .sidebar-item:hover {
             background: rgba(34, 197, 94, 0.1);
-            color: #22c55e;
-            transform: translateX(4px);
+            color: var(--primary);
         }
 
         .sidebar-item.active {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-            border-left: 3px solid #22c55e;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--primary);
+            box-shadow: inset 4px 0 0 var(--primary);
         }
 
-        /* Main content */
         .main-content {
-            margin-left: 280px;
-            padding: 24px;
+            margin-left: 260px;
+            padding: 32px;
             min-height: 100vh;
         }
 
-        /* Cards */
         .card {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
         .card:hover {
             border-color: rgba(34, 197, 94, 0.3);
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+            transform: translateY(-2px);
         }
 
-        /* Metric cards */
-        .metric-card {
-            text-align: center;
-            padding: 24px;
-        }
-
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #22c55e;
-            margin: 12px 0;
-        }
-
-        .metric-label {
-            font-size: 0.875rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* Alert list */
-        .alert-item {
-            padding: 16px;
-            border-left: 4px solid;
-            margin-bottom: 12px;
-            border-radius: 4px;
-            background: rgba(51, 65, 85, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .alert-item:hover {
-            transform: translateX(4px);
-            background: rgba(51, 65, 85, 0.8);
-        }
-
-        .alert-critical { border-left-color: #ef4444; }
-        .alert-high { border-left-color: #f97316; }
-        .alert-medium { border-left-color: #eab308; }
-        .alert-low { border-left-color: #22c55e; }
-
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #22c55e, #06b6d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Status badges */
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge-success {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-        }
-
-        .badge-warning {
-            background: rgba(234, 179, 8, 0.2);
-            color: #eab308;
-        }
-
-        .badge-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
+        .status-dot {
             width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
+        .pulse { animation: pulse-animation 2s infinite; }
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(34, 197, 94, 0.3);
-            border-radius: 4px;
-        }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(34, 197, 94, 0.5);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 200px;
-            }
-            .main-content {
-                margin-left: 200px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                border-right: none;
-                border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-        }
+        .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--primary); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(34, 197, 94, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(34, 197, 94, 0.4); }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="p-6 border-b border-slate-700">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center font-bold text-white">B</div>
+    <div class="sidebar glass">
+        <div class="p-8 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-cyan-500 flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-green-500/20">B</div>
                 <div>
-                    <h2 class="font-bold text-lg text-green-400">BlueTeam</h2>
-                    <p class="text-xs text-slate-500">AIO v1.3.0</p>
+                    <h2 class="font-bold text-xl tracking-tight">BlueTeam</h2>
+                    <p class="text-[10px] uppercase tracking-widest text-green-500 font-bold">Ultimate AIO</p>
                 </div>
             </div>
         </div>
 
-        <nav class="p-4">
-            <div class="sidebar-item active" onclick="switchTab('dashboard')">
-                <span>📊</span>
-                <span>Dashboard</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('kernel')">
-                <span>🔐</span>
-                <span>Kernel Security</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('network')">
-                <span>🌐</span>
-                <span>Network Defense</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('edr')">
-                <span>🎯</span>
-                <span>EDR Core</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('ai')">
-                <span>🤖</span>
-                <span>AI Threat Intel</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('logs')">
-                <span>📋</span>
-                <span>Logs & Events</span>
-            </div>
-            <div class="sidebar-item" onclick="switchTab('ir')">
-                <span>🚨</span>
-                <span>IR Orchestration</span>
-            </div>
+        <nav class="space-y-1">
+            <div class="sidebar-item active" onclick="switchTab('dashboard')"><span>📊</span> Dashboard</div>
+            <div class="sidebar-item" onclick="switchTab('ai')"><span>🤖</span> AI Multi-Agent</div>
+            <div class="sidebar-item" onclick="switchTab('soar')"><span>⚡</span> SOAR Playbooks</div>
+            <div class="sidebar-item" onclick="switchTab('p2p')"><span>🕸️</span> P2P Mesh</div>
+            <div class="sidebar-item" onclick="switchTab('compliance')"><span>⚖️</span> Compliance</div>
+            <div class="sidebar-item" onclick="switchTab('kernel')"><span>🔐</span> Kernel & YARA</div>
+            <div class="sidebar-item" onclick="switchTab('network')"><span>🌐</span> Network Defense</div>
+            <div class="sidebar-item" onclick="switchTab('logs')"><span>📋</span> Event Logs</div>
         </nav>
 
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
-            <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-800">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500"></div>
+        <div class="absolute bottom-8 left-0 right-0 px-6">
+            <div class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">🛡️</div>
                 <div>
-                    <p class="text-sm font-semibold">Admin</p>
-                    <p class="text-xs text-slate-500">System Administrator</p>
+                    <p class="text-xs font-bold">System Secure</p>
+                    <p class="text-[10px] text-slate-500">mTLS: Active</p>
                 </div>
             </div>
         </div>
@@ -315,312 +156,214 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Header -->
-        <div class="header fade-in">
+        <div class="flex justify-between items-end mb-10">
             <div>
-                <h1>Operational Overview</h1>
-                <p class="text-slate-400 text-sm mt-2">Real-time security monitoring and threat detection</p>
+                <h1 id="tab-title" class="text-4xl font-bold tracking-tight">Command Dashboard</h1>
+                <p class="text-slate-400 mt-2">Global security posture and real-time intelligence</p>
             </div>
-            <div class="flex gap-4">
-                <button class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition">
-                    🔄 Refresh
-                </button>
-                <button class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition">
-                    ⚙️ Settings
-                </button>
+            <div class="flex gap-3">
+                <div class="px-4 py-2 rounded-xl glass flex items-center gap-2">
+                    <span class="status-dot bg-green-500 pulse"></span>
+                    <span class="text-xs font-bold uppercase tracking-wider">Live Monitoring</span>
+                </div>
+                <button class="p-2 rounded-xl glass hover:bg-white/5 transition">⚙️</button>
             </div>
         </div>
 
-        <!-- Status Bar -->
-        <div class="grid grid-cols-4 gap-4 mb-8 slide-in">
-            <div class="card metric-card">
-                <div class="text-red-400 text-2xl">🔴</div>
-                <div class="metric-label">Threat Level</div>
-                <div class="metric-value text-red-400">ELEVATED</div>
-                <div class="text-xs text-slate-500">12 Active Threats</div>
-            </div>
-            <div class="card metric-card">
-                <div class="text-green-400 text-2xl">✓</div>
-                <div class="metric-label">Sensors Online</div>
-                <div class="metric-value text-green-400">128/128</div>
-                <div class="text-xs text-slate-500">All systems healthy</div>
-            </div>
-            <div class="card metric-card">
-                <div class="text-blue-400 text-2xl">📊</div>
-                <div class="metric-label">Events Today</div>
-                <div class="metric-value text-blue-400">3,842</div>
-                <div class="text-xs text-slate-500">+12% from yesterday</div>
-            </div>
-            <div class="card metric-card">
-                <div class="text-green-400 text-2xl">⏱️</div>
-                <div class="metric-label">System Uptime</div>
-                <div class="metric-value text-green-400">15d 07h</div>
-                <div class="text-xs text-slate-500">Last restart: 15 days ago</div>
-            </div>
-        </div>
-
-        <!-- Main Dashboard Grid -->
-        <div class="grid grid-cols-3 gap-6 mb-8">
-            <!-- 3D Network Topology -->
-            <div class="col-span-2 card slide-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">3D Network Topology</h2>
-                    <div class="flex gap-2">
-                        <span class="badge badge-success">● LIVE</span>
-                        <span class="badge bg-blue-900 text-blue-300">3D ENGINE</span>
-                    </div>
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid grid-cols-4 gap-6 mb-8">
+                <div class="card">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Threat Score</p>
+                    <div class="metric-value">12.4</div>
+                    <p class="text-[10px] text-green-500 mt-2">▼ 4.2% from last hour</p>
                 </div>
-                <div id="topology3d" class="bg-slate-900 rounded-lg h-80 overflow-hidden">
-                    <!-- Three.js Canvas will be injected here -->
+                <div class="card">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Active Agents</p>
+                    <div class="metric-value">2,842</div>
+                    <p class="text-[10px] text-slate-400 mt-2">Global Mesh Network</p>
+                </div>
+                <div class="card">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">AI Predictions</p>
+                    <div class="metric-value">98.2%</div>
+                    <p class="text-[10px] text-cyan-500 mt-2">Confidence Interval</p>
+                </div>
+                <div class="card">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Uptime</p>
+                    <div class="metric-value">99.99%</div>
+                    <p class="text-[10px] text-slate-400 mt-2">High Availability Mode</p>
                 </div>
             </div>
 
-            <!-- Defense Score & BAS -->
-            <div class="card slide-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">Defense Score</h2>
-                    <span class="badge bg-green-900 text-green-300">85.0</span>
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 card h-[400px]">
+                    <h3 class="font-bold mb-6">Real-time Traffic Analysis</h3>
+                    <canvas id="trafficChart"></canvas>
                 </div>
-                <div class="text-center py-4">
-                    <div class="text-5xl font-bold text-green-500 mb-2">85%</div>
-                    <p class="text-slate-400 text-sm">Purple Team Validation: PASS</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-xs font-semibold transition-colors">
-                        RUN BAS
-                    </button>
-                    <button class="flex-1 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-xs font-semibold transition-colors">
-                        ENTER WEBXR SOC
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alerts and Intelligence -->
-        <div class="grid grid-cols-2 gap-6">
-            <!-- Recent Alerts -->
-            <div class="card slide-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">Recent Alerts</h2>
-                    <a href="#" class="text-green-400 text-sm hover:underline">View All</a>
-                </div>
-                <div class="space-y-3">
-                    <div class="alert-item alert-critical">
-                        <div class="font-semibold text-sm">Multiple failed login attempts</div>
-                        <div class="text-xs text-slate-400 mt-1">SSH brute force attack detected from 185.220.101.45</div>
-                        <div class="text-xs text-slate-500 mt-2">2m ago • Network</div>
-                    </div>
-                    <div class="alert-item alert-high">
-                        <div class="font-semibold text-sm">Malware execution blocked</div>
-                        <div class="text-xs text-slate-400 mt-1">EDR blocked suspicious ELF binary execution attempt</div>
-                        <div class="text-xs text-slate-500 mt-2">5m ago • EDR</div>
-                    </div>
-                    <div class="alert-item alert-medium">
-                        <div class="font-semibold text-sm">Data exfiltration attempt</div>
-                        <div class="text-xs text-slate-400 mt-1">Potential data transfer to external domain detected</div>
-                        <div class="text-xs text-slate-500 mt-2">8m ago • Network</div>
-                    </div>
-                    <div class="alert-item alert-low">
-                        <div class="font-semibold text-sm">Port scanning activity</div>
-                        <div class="text-xs text-slate-400 mt-1">Port scan detected from internal host</div>
-                        <div class="text-xs text-slate-500 mt-2">18m ago • Network</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Real-Time SBOM & Supply Chain -->
-            <div class="card slide-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">Live SBOM Monitor</h2>
-                    <span class="badge bg-cyan-900 text-cyan-300">1,250 PKGS</span>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex justify-between text-xs">
-                        <span class="text-slate-400">OpenSSL</span>
-                        <span class="text-green-400">v3.0.2 (SECURE)</span>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-slate-400">LibBPF</span>
-                        <span class="text-green-400">v0.7.0 (SECURE)</span>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-slate-400">Python-BCC</span>
-                        <span class="text-yellow-400">v0.24.0 (UPDATE AVAIL)</span>
-                    </div>
-                    <div class="mt-4 p-3 bg-slate-900/50 rounded-lg border border-cyan-500/30">
-                        <p class="text-xs text-cyan-300 mb-1">SUPPLY CHAIN INTEGRITY</p>
-                        <p class="text-xs text-slate-300">All running binaries match signed SBOM baseline. No unauthorized dependencies detected.</p>
-                    </div>
-                </div>
-            </div>
+                <div class="card">
+                    <h3 class="font-bold mb-6">Recent Critical Alerts</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                            <p class="text-xs font-bold text-red-500">BRUTE FORCE ATTEMPT</p>
+                            <p class="text-[10px] text-slate-400 mt-1">IP: 185.220.101.45 • SSH</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                            <p class="text-xs font-bold text-orange-500">SUSPICIOUS MMAP</p>
+                            <p class="text-[10px] text-slate-400 mt-1">PID: 4829 • Kernel Probe</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                            <p class="text-xs font-bold text-purple-500">P2P IOC RECEIVED</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Hash: 8f2a...c91e • Mesh</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Tab -->
+        <div id="ai" class="tab-content">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 card">
+                    <h3 class="font-bold mb-6">Multi-Agent Orchestration</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-6 rounded-2xl bg-slate-900/50 border border-white/5">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">K</div>
+                                <span class="text-[10px] font-bold text-green-500">ACTIVE</span>
+                            </div>
+                            <h4 class="font-bold text-sm">Kernel Agent</h4>
+                            <p class="text-xs text-slate-500 mt-2">Monitoring syscall patterns and rootkit signatures.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-900/50 border border-white/5">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500">N</div>
+                                <span class="text-[10px] font-bold text-blue-500">ACTIVE</span>
+                            </div>
+                            <h4 class="font-bold text-sm">Network Agent</h4>
+                            <p class="text-xs text-slate-500 mt-2">Analyzing traffic for C2 and exfiltration patterns.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold mb-6">Model Management</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Active Model</span>
+                            <span class="font-bold">Llama-3-8B-Q4</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5">
+                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <button class="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 font-bold text-xs transition">QUANTIZE NEW MODEL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOAR Tab -->
+        <div id="soar" class="tab-content">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 card">
+                    <h3 class="font-bold mb-6">Automated Playbooks</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">🛡️</div>
+                                <div>
+                                    <p class="text-sm font-bold">Ransomware Containment</p>
+                                    <p class="text-[10px] text-slate-500">Kill Process -> Snapshot -> Isolate</p>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 rounded-lg bg-red-600 text-xs font-bold">EXECUTE</button>
+                        </div>
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500">🌐</div>
+                                <div>
+                                    <p class="text-sm font-bold">C2 Takedown</p>
+                                    <p class="text-[10px] text-slate-500">Block IP -> Memory Dump -> Alert</p>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 rounded-lg bg-orange-600 text-xs font-bold">EXECUTE</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold mb-6">Execution History</h3>
+                    <div class="text-center py-10">
+                        <p class="text-xs text-slate-500">No playbooks executed in the last 24h</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Tab -->
+        <div id="compliance" class="tab-content">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="card text-center">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">PCI-DSS</h3>
+                    <div class="text-4xl font-bold text-green-500">COMPLIANT</div>
+                    <p class="text-[10px] text-slate-400 mt-4">Last Audit: 2h ago</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">HIPAA</h3>
+                    <div class="text-4xl font-bold text-orange-500">PARTIAL</div>
+                    <p class="text-[10px] text-slate-400 mt-4">Encryption Check Failed</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">GDPR</h3>
+                    <div class="text-4xl font-bold text-green-500">COMPLIANT</div>
+                    <p class="text-[10px] text-slate-400 mt-4">Data Isolation: Active</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Tab switching
-        function switchTab(tab) {
-            console.log('Switching to tab:', tab);
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-            event.target.closest('.sidebar-item').classList.add('active');
-        }
-
-        // Initialize 3D Topology
-        function init3D() {
-            const container = document.getElementById('topology3d');
-            if (!container) return;
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(renderer.domElement);
-
-            // Create nodes
-            const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-            const material = new THREE.MeshPhongMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.5 });
             
-            const nodes = [];
-            for (let i = 0; i < 10; i++) {
-                const node = new THREE.Mesh(geometry, material);
-                node.position.set(Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5);
-                scene.add(node);
-                nodes.push(node);
-            }
-
-            // Add lights
-            const light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(10, 10, 10);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0x404040));
-
-            camera.position.z = 15;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                nodes.forEach(node => {
-                    node.rotation.x += 0.01;
-                    node.rotation.y += 0.01;
-                });
-                scene.rotation.y += 0.005;
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            const titles = {
+                'dashboard': 'Command Dashboard',
+                'ai': 'AI Multi-Agent Intelligence',
+                'soar': 'SOAR Automation',
+                'p2p': 'P2P Mesh Network',
+                'compliance': 'Governance & Compliance',
+                'kernel': 'Kernel & YARA Security',
+                'network': 'Network Defense',
+                'logs': 'Event Logs'
+            };
+            document.getElementById('tab-title').innerText = titles[tabId];
         }
 
-        // Initialize charts
-        function initCharts() {
-            // Threat Map Chart
-            const threatCtx = document.getElementById('threatMapChart');
-            if (threatCtx) {
-                new Chart(threatCtx, {
-                    type: 'bubble',
-                    data: {
-                        datasets: [
-                            {
-                                label: 'Critical',
-                                data: [{x: 10, y: 20, r: 15}, {x: 50, y: 60, r: 12}],
-                                backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                            },
-                            {
-                                label: 'High',
-                                data: [{x: 30, y: 40, r: 10}, {x: 70, y: 30, r: 8}],
-                                backgroundColor: 'rgba(249, 115, 22, 0.6)',
-                            },
-                            {
-                                label: 'Medium',
-                                data: [{x: 60, y: 70, r: 8}],
-                                backgroundColor: 'rgba(234, 179, 8, 0.6)',
-                            },
-                            {
-                                label: 'Low',
-                                data: [{x: 80, y: 50, r: 5}],
-                                backgroundColor: 'rgba(34, 197, 94, 0.6)',
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: { color: '#94a3b8' }
-                            }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
-                            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
-                        }
-                    }
-                });
+        // Traffic Chart
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Network Traffic (Gbps)',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
             }
-
-            // CPU Gauge
-            const cpuCtx = document.getElementById('cpuGauge');
-            if (cpuCtx) {
-                new Chart(cpuCtx, {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{
-                            data: [23, 77],
-                            backgroundColor: ['#22c55e', 'rgba(34, 197, 94, 0.1)'],
-                            borderColor: 'rgba(30, 41, 59, 0.8)',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            }
-
-            // Memory Gauge
-            const memCtx = document.getElementById('memGauge');
-            if (memCtx) {
-                new Chart(memCtx, {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{
-                            data: [61, 39],
-                            backgroundColor: ['#06b6d4', 'rgba(6, 182, 212, 0.1)'],
-                            borderColor: 'rgba(30, 41, 59, 0.8)',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            }
-        }
-
-        // Real-time updates
-        function updateMetrics() {
-            // Simulate real-time data updates
-            setInterval(() => {
-                const cpuUsage = Math.floor(Math.random() * 80) + 10;
-                const memUsage = Math.floor(Math.random() * 80) + 20;
-                console.log(`CPU: ${cpuUsage}%, Memory: ${memUsage}%`);
-            }, 5000);
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-            init3D();
-            updateMetrics();
         });
     </script>
 </body>
