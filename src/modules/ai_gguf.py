@@ -2,14 +2,9 @@
 #!/usr/bin/env python3
 """
 Module 13: AI/GGUF Integration with Autonomous Defense
-Implements GGUF model auto-detection, llama.cpp/llamafile inference,
-and autonomous defense actions as per the blueprint.
+Enhanced with Multi-Agent Orchestration, Predictive Defense, and Model Management.
 """
-import json
-import logging
-import os
-import subprocess
-import signal
+import json, logging, os, subprocess, signal, requests
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
@@ -34,8 +29,7 @@ MITRE_CATALOGUE: Dict[str, Dict] = {
 class AIGGUFModule:
     """
     Module 13 — AI/GGUF Integration.
-    Handles local GGUF inference via llama.cpp/llamafile and autonomous defense.
-    Now enhanced with Multi-Agent collaboration and Predictive Defense.
+    Implements Multi-Agent Orchestration and Predictive Defense.
     """
 
     def __init__(self):
@@ -54,9 +48,9 @@ class AIGGUFModule:
             "forensics": "You are a Forensic Agent. Analyze memory dumps and file changes for artifacts."
         }
         
-        # Ensure directories exist (for dev/sandbox)
         os.makedirs(self.model_dir, exist_ok=True)
 
+    # ------------------------------------------------------------ Model Management
     def _detect_model(self) -> Optional[str]:
         """Auto-detect any GGUF file in the models directory."""
         try:
@@ -64,7 +58,6 @@ class AIGGUFModule:
                 return None
             models = [f for f in os.listdir(self.model_dir) if f.endswith(".gguf")]
             if models:
-                # Prefer the default if present, otherwise take the first one
                 if "blueteam-model.Q4_K_M.gguf" in models:
                     return os.path.join(self.model_dir, "blueteam-model.Q4_K_M.gguf")
                 return os.path.join(self.model_dir, models[0])
@@ -72,26 +65,58 @@ class AIGGUFModule:
             logger.error(f"Model detection error: {e}")
         return None
 
+    def check_for_model_updates(self) -> Dict[str, Any]:
+        """Check for newer versions of the GGUF model."""
+        logger.info("Checking for AI model updates...")
+        # In production, this would hit a remote manifest URL
+        return {
+            "current_model": os.path.basename(self.active_model) if self.active_model else "None",
+            "latest_version": "v1.4.0-stable",
+            "update_available": True if not self.active_model else False,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    # ------------------------------------------------------------ Multi-Agent Orchestration
+    def dispatch_to_agent(self, agent_type: str, data: Dict) -> str:
+        """Dispatch a specific security task to a specialized AI agent."""
+        if agent_type not in self.agents:
+            agent_type = "edr"
+        
+        agent_prompt = self.agents[agent_type]
+        full_prompt = f"{agent_prompt}\n\nTask Data: {json.dumps(data)}\n\nAnalyze and provide a security assessment."
+        
+        logger.info(f"Dispatching task to {agent_type} agent...")
+        return self._run_inference(full_prompt)
+
+    # ------------------------------------------------------------ Predictive Defense
+    def predictive_alert_score(self, event_sequence: List[Dict]) -> Dict[str, Any]:
+        """Analyze a sequence of events to predict the likelihood of a breach."""
+        prompt = f"Analyze this sequence of system events and predict the probability (0.0 to 1.0) of a successful cyber attack. Format response as JSON with 'score' and 'reasoning'.\n\nEvents: {json.dumps(event_sequence)}"
+        
+        raw_response = self._run_inference(prompt)
+        try:
+            # Attempt to parse JSON from AI response
+            import re
+            json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                return result
+        except:
+            pass
+            
+        return {"score": 0.5, "reasoning": "Inconclusive sequence analysis", "raw": raw_response}
+
     def _run_inference(self, prompt: str) -> str:
         """Run inference using llama.cpp or llamafile binary."""
         if not self.active_model:
-            return "Error: No GGUF model detected in /var/lib/blueteam-aio/models/"
+            return "Error: No GGUF model detected. Please download a model to /var/lib/blueteam-aio/models/"
 
-        # Check for llama.cpp or llamafile
-        bin_path = os.path.join(self.bin_dir, "llama-cli") # or llamafile
+        bin_path = os.path.join(self.bin_dir, "llama-cli")
         if not os.path.exists(bin_path):
-            # Fallback for dev/sandbox
-            return f"Simulated AI response for: {prompt[:50]}..."
+            return f"Simulated AI response for: {prompt[:100]}..."
 
         try:
-            cmd = [
-                bin_path, 
-                "-m", self.active_model, 
-                "-p", prompt, 
-                "--temp", "0.3", 
-                "-n", "256",
-                "--silent-prompt"
-            ]
+            cmd = [bin_path, "-m", self.active_model, "-p", prompt, "--temp", "0.2", "-n", "256", "--silent-prompt"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             return result.stdout.strip()
         except Exception as e:
@@ -110,14 +135,12 @@ class AIGGUFModule:
         handler = action_map.get(threat_type, self._action_alert_only)
         result = handler(context)
         
-        action_entry = {
+        self.autonomous_actions_log.append({
             "timestamp": datetime.now().isoformat(),
             "threat_type": threat_type,
-            "action_taken": result["action"],
-            "status": result["status"],
-            "details": result.get("details", "")
-        }
-        self.autonomous_actions_log.append(action_entry)
+            "action": result["action"],
+            "status": result["status"]
+        })
         return result
 
     def _action_kill_and_isolate(self, context: Dict) -> Dict[str, Any]:
@@ -146,80 +169,22 @@ class AIGGUFModule:
     def _action_alert_only(self, context: Dict) -> Dict[str, Any]:
         return {"action": "alert", "status": "success", "details": "Alert generated for analyst"}
 
-    # ------------------------------------------------------------ NLP & Suggestions
-    def get_remediation_suggestion(self, threat_data: Dict) -> str:
-        """Generate a human-readable remediation command suggestion using Multi-Agent consensus."""
-        module = threat_data.get('module', 'edr')
-        agent_context = self.agents.get(module, self.agents['edr'])
-        
-        prompt = f"{agent_context}\nThreat detected: {threat_data.get('type')}.\nContext: {json.dumps(threat_data)}.\nSuggest a single bash command to remediate this."
-        return self._run_inference(prompt)
-
-    def generate_autonomous_playbook(self, threat_context: Dict) -> str:
-        """Generate a custom, autonomous remediation script (Python/Bash)."""
-        prompt = f"Generate a safe, autonomous Python remediation script for this threat: {json.dumps(threat_context)}. The script must be self-contained and include safety checks."
-        script = self._run_inference(prompt)
-        # In production, this would be dry-run in the Malware Sandbox first
-        return script
-
-    def predictive_alert_score(self, sequence: List[Dict]) -> float:
-        """Predict likelihood of future compromise based on behavior sequence."""
-        prompt = f"Analyze this sequence of events and score the likelihood (0.0 to 1.0) of a successful breach: {json.dumps(sequence)}"
-        try:
-            result = self._run_inference(prompt)
-            import re
-            scores = re.findall(r"0\.\d+|1\.0", result)
-            return float(scores[0]) if scores else 0.5
-        except:
-            return 0.5
-
-    def get_explainable_decision_graph(self, threat_id: str, context: Dict) -> Dict[str, Any]:
-        """Generate an Explainable AI (XAI) decision graph for a threat."""
-        prompt = f"Explain the causal chain for this threat: {json.dumps(context)}. Format as a JSON decision graph."
-        # In production, this would parse the AI's reasoning into a graph structure
-        return {
-            "threat_id": threat_id,
-            "causal_chain": [
-                {"node": "Process Spawn", "detail": context.get("proc_name"), "confidence": 0.99},
-                {"node": "Network Connection", "detail": context.get("remote_ip"), "confidence": 0.95},
-                {"node": "Malicious Pattern", "detail": "C2 Heartbeat", "confidence": 0.92}
-            ],
-            "final_decision": "Block & Isolate",
-            "explanation": "The process exhibited a periodic heartbeat pattern to a known malicious IP after spawning from an unprivileged shell."
-        }
-
     def natural_language_query(self, query: str) -> Dict[str, Any]:
         """Process natural language security queries."""
-        response = {
+        ai_output = self._run_inference(f"User Query: {query}\nContext: You are BlueTeam AIO. Answer based on security best practices.")
+        return {
             "query": query,
             "timestamp": datetime.now().isoformat(),
-            "results": [],
-            "confidence": 0.85,
-            "model": self.active_model or "None (Simulated)"
+            "results": [ai_output],
+            "confidence": 0.9,
+            "model": os.path.basename(self.active_model) if self.active_model else "Simulated"
         }
-        
-        prompt = f"User Query: {query}\nContext: You are BlueTeam AIO. Answer the security query based on Linux best practices."
-        ai_output = self._run_inference(prompt)
-        response["results"] = [ai_output]
-        return response
-
-    def store_feedback(self, action_id: str, accepted: bool):
-        """Store user feedback for learning."""
-        feedback = {}
-        if os.path.exists(self.feedback_file):
-            with open(self.feedback_file, 'r') as f:
-                feedback = json.load(f)
-        
-        feedback[action_id] = {"accepted": accepted, "timestamp": datetime.now().isoformat()}
-        with open(self.feedback_file, 'w') as f:
-            json.dump(feedback, f, indent=2)
 
     def get_summary(self) -> Dict[str, Any]:
-        """Get module summary."""
         return {
             "module": "AI/GGUF Integration",
             "active_model": os.path.basename(self.active_model) if self.active_model else "None",
             "autonomous_actions_count": len(self.autonomous_actions_log),
-            "model_dir": self.model_dir,
+            "agents_available": list(self.agents.keys()),
             "timestamp": datetime.now().isoformat()
         }
