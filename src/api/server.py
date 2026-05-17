@@ -28,6 +28,7 @@ from modules.reporting import ReportingCompliance
 from modules.ai_gguf import AIGGUFModule
 from modules.metrics import MetricsModule
 from modules.tip_integration import TIPIntegrationModule
+from modules.soar_orchestrator import SOAROrchestrator
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
@@ -50,6 +51,7 @@ reporting = ReportingCompliance()
 ai = AIGGUFModule()
 metrics = MetricsModule()
 tip = TIPIntegrationModule()
+soar = SOAROrchestrator()
 
 @app.get("/health")
 async def health():
@@ -159,6 +161,14 @@ async def tip_summary():
 @app.post("/api/tip/sync")
 async def tip_sync():
     return tip.fetch_external_iocs()
+
+@app.get("/api/soar/summary")
+async def soar_summary():
+    return soar.get_summary()
+
+@app.post("/api/soar/execute")
+async def soar_execute(playbook: str, context: Dict = None):
+    return soar.execute_playbook(playbook, context or {})
 
 @app.post("/api/ai/action")
 async def ai_action(request: Request):

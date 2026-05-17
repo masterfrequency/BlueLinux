@@ -36,6 +36,7 @@ from modules.sbom_monitor import SBOMMonitorModule
 from modules.self_healing import SelfHealingModule
 from modules.metrics import MetricsModule
 from modules.tip_integration import TIPIntegrationModule
+from modules.soar_orchestrator import SOAROrchestrator
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -98,6 +99,7 @@ class BlueTeamDaemon:
         self.healing   = SelfHealingModule()
         self.metrics   = MetricsModule()
         self.tip       = TIPIntegrationModule()
+        self.soar      = SOAROrchestrator(daemon_ref=self)
 
         # Map module keys to instances for clean iteration
         self._modules = {
@@ -124,6 +126,7 @@ class BlueTeamDaemon:
             "21_healing":   self.healing,
             "22_metrics":   self.metrics,
             "23_tip":       self.tip,
+            "24_soar":      self.soar,
         }
 
         logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")
