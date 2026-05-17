@@ -37,6 +37,7 @@ from modules.self_healing import SelfHealingModule
 from modules.metrics import MetricsModule
 from modules.tip_integration import TIPIntegrationModule
 from modules.soar_orchestrator import SOAROrchestrator
+from modules.compliance_audit import ComplianceAuditModule
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -100,6 +101,7 @@ class BlueTeamDaemon:
         self.metrics   = MetricsModule()
         self.tip       = TIPIntegrationModule()
         self.soar      = SOAROrchestrator(daemon_ref=self)
+        self.compliance = ComplianceAuditModule()
 
         # Map module keys to instances for clean iteration
         self._modules = {
@@ -127,6 +129,7 @@ class BlueTeamDaemon:
             "22_metrics":   self.metrics,
             "23_tip":       self.tip,
             "24_soar":      self.soar,
+            "25_compliance": self.compliance,
         }
 
         logger.info("All 21 modules initialised successfully (Modules 1-19 backend + Module 20 API + Module 21 TUI)")
@@ -154,6 +157,10 @@ class BlueTeamDaemon:
                 # Periodic TIP Sync
                 if cycle % 60 == 0: # Every 60 cycles
                     self.tip.fetch_external_iocs()
+                
+                # Periodic Compliance Audit
+                if cycle % 360 == 0: # Every 360 cycles
+                    self.compliance.run_compliance_audit()
 
                 data = {
                     "cycle":     cycle,
