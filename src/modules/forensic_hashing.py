@@ -1,5 +1,4 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
 Forensic Hashing Module: Tamper-proof chain of custody for logs

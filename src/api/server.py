@@ -7,11 +7,13 @@ Exposing all 26 security modules via FastAPI.
 import sys, os, json, logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends, status
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from typing import Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Dict, Any, Optional
 from datetime import datetime
+import secrets
 
 from modules.kernel_security import KernelSecurityModule
 from modules.memory_forensics import MemoryForensicsModule
@@ -35,9 +37,46 @@ from modules.yara_scanner import YaraScannerModule
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
 app = FastAPI(title="BlueTeam AIO API", version="1.3.0",
-              description="Production-grade cybersecurity platform — 26 modules via REST")
+              description="Production-grade cybersecurity platform — 26 modules via REST",
+              dependencies=[Depends(verify_api_key)])
 
-# Initialize all modules
+# ── API Key Authentication ──────────────────────────────────────────────────
+API_KEY = os.environ.get("BLUETEAM_API_KEY")
+if not API_KEY:
+    API_KEY = secrets.token_hex(32)
+    logger.warning("BLUETEAM_API_KEY not set — generated ephemeral key: %s", API_KEY)
+
+AUTH_EXEMPT_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+
+async def verify_api_key(request: Request):
+    """Dependency: checks X-API-Key header or Authorization: Bearer <key>."""
+    # Skip auth for exempt paths
+    if request.url.path in AUTH_EXEMPT_PATHS:
+        return True
+    # Check X-API-Key header
+    api_key = request.headers.get("X-API-Key")
+    if api_key and api_key == API_KEY:
+        return True
+    # Check Bearer token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer ") and auth_header[7:] == API_KEY:
+        return True
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Missing or invalid API key. Provide via X-API-Key header or Bearer token.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+# ── CORS Middleware ──────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Initialize all modules ──────────────────────────────────────────────────
 kernel = KernelSecurityModule()
 memory = MemoryForensicsModule()
 network = NetworkDefenseModule()
@@ -217,6 +256,8 @@ async def docs():
     return {
         "api": "BlueTeam AIO REST API",
         "version": "1.3.0",
+        "authenticated": True,
+        "auth_method": "X-API-Key or Bearer token",
         "endpoints": [
             "/health",
             "/api/dashboard",

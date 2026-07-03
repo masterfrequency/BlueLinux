@@ -1,5 +1,4 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """Module 18: P2P Mesh Intelligence & Federated Learning"""
 import json, logging, socket, threading, time

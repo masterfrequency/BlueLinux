@@ -1,5 +1,4 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
 Stealth Mode Module: Hide BlueTeam from basic ps/lsmod (defensive deception testing only)
