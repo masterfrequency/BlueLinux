@@ -38,6 +38,12 @@ DEFAULT_IOC_PATTERNS: List[Dict[str, Any]] = [
     {"name": "port_scan",        "pattern": r"scan|nmap|masscan|zmap",                         "severity": "high"},
     {"name": "privilege_escalation", "pattern": r"(CVE-\d{4}-\d{4,}|pwnkit|dirtypipe|dirtycow|SUID|cap_setuid)", "severity": "critical"},
     {"name": "malware_indicator", "pattern": r"(mimikatz|linpeas|les|pspy|chisel|ligolo|merlin|cobalt)", "severity": "critical"},
+    {"name": "c2_beacon",         "pattern": r"(HEEL_BEACON|HEEL_REPORT|beacon_sent|C2_ping)",      "severity": "critical"},
+    {"name": "honeypot_hit",      "pattern": r"(HoneyPotSSHTransport|honeypot_session|cmd_hit)",      "severity": "high"},
+    {"name": "ssh_auth_attempt",  "pattern": r"(auth_attempt|login_trial|brute_force_probe)",         "severity": "high"},
+    {"name": "ntp_monlist",       "pattern": r"(monlist|ntp_monlist|ntp_amplif)",                     "severity": "medium"},
+    {"name": "worm_propagation",  "pattern": r"(worm_deploy|worm_mesh|botnet_cmd|retaliation)",       "severity": "critical"},
+    {"name": "data_exfil",        "pattern": r"(exfil|exfiltration|genzai|data_leak)",                 "severity": "critical"},
 ]
 
 
@@ -577,6 +583,16 @@ class FileWatcherCollector(LogCollector):
             "/var/log/kern.log",
             "/var/log/daemon.log",
             "/var/log/messages",
+            "/var/log/ssh_auth_loop.log",
+            "/var/log/cowrie_bridge_v2.log",
+            "/var/log/cowrie_bridge_v3.log",
+            "/var/log/cowrie_beacons.log",
+            "/var/log/cowrie_fingerprints.log",
+            "/var/log/ntp_forge/c2_listener_v2.log",
+            "/var/log/ntp_forge/beacons.json",
+            "/var/log/ntp_forge/heel_intel.json",
+            "/var/log/ntp_forge/stats.json",
+            "/var/log/chimera/ssh_brute_pipeline.log",
         ]
         self._positions: Dict[str, int] = {}
         self._poll = select.poll()
@@ -586,8 +602,12 @@ class FileWatcherCollector(LogCollector):
                 correlation_engine: "CorrelationEngine") -> int:
         event_count = 0
         now_ts = datetime.utcnow().isoformat()
+        deadline = time.time() + 5.0  # cap at 5 seconds per call
 
         for path in self._paths:
+            if time.time() > deadline:
+                logger.warning("FileWatcherCollector hit 5s deadline — stopping scan")
+                break
             if not os.path.isfile(path):
                 continue
 
