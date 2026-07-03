@@ -4,7 +4,7 @@
 BlueTeam AIO — REST API Server
 Exposing all 26 security modules via FastAPI.
 """
-import sys, os, json, logging
+import sys, os, json, logging, asyncio
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from fastapi import FastAPI, HTTPException, Request, Depends, status
@@ -36,11 +36,8 @@ from modules.yara_scanner import YaraScannerModule
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(name)s: %(message)s')
 logger = logging.getLogger('blueteam-api')
-app = FastAPI(title="BlueTeam AIO API", version="1.3.0",
-              description="Production-grade cybersecurity platform — 26 modules via REST",
-              dependencies=[Depends(verify_api_key)])
 
-# ── API Key Authentication ──────────────────────────────────────────────────
+# ── API Key Authentication (defined BEFORE FastAPI app) ──────────────────────
 API_KEY = os.environ.get("BLUETEAM_API_KEY")
 if not API_KEY:
     API_KEY = secrets.token_hex(32)
@@ -49,15 +46,12 @@ if not API_KEY:
 AUTH_EXEMPT_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
 
 async def verify_api_key(request: Request):
-    """Dependency: checks X-API-Key header or Authorization: Bearer <key>."""
-    # Skip auth for exempt paths
+    """Dependency: checks X-API-Key header or Authorization: Bearer token."""
     if request.url.path in AUTH_EXEMPT_PATHS:
         return True
-    # Check X-API-Key header
     api_key = request.headers.get("X-API-Key")
     if api_key and api_key == API_KEY:
         return True
-    # Check Bearer token
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer ") and auth_header[7:] == API_KEY:
         return True
@@ -66,6 +60,10 @@ async def verify_api_key(request: Request):
         detail="Missing or invalid API key. Provide via X-API-Key header or Bearer token.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+app = FastAPI(title="BlueTeam AIO API", version="1.3.0",
+              description="Production-grade cybersecurity platform — 26 modules via REST",
+              dependencies=[Depends(verify_api_key)])
 
 # ── CORS Middleware ──────────────────────────────────────────────────────────
 app.add_middleware(
@@ -96,141 +94,169 @@ soar = SOAROrchestrator()
 compliance = ComplianceAuditModule()
 yara_scan = YaraScannerModule()
 
+# ── Async wrapper for blocking module calls ─────────────────────────────────
+async def _run(func, *args, **kwargs):
+    return await asyncio.to_thread(func, *args, **kwargs)
+
 @app.get("/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 @app.get("/api/dashboard")
 async def dashboard():
+    k, m, n, f, e, s, v, i, sa, h, c, r, a, t, so, co = await asyncio.gather(
+        _run(kernel.get_summary),
+        _run(memory.get_summary),
+        _run(network.get_summary),
+        _run(fim.get_summary),
+        _run(edr.get_summary),
+        _run(siem.get_summary),
+        _run(vuln.get_summary),
+        _run(ir.get_summary),
+        _run(sandbox.get_summary),
+        _run(hardening.get_summary),
+        _run(cloud.get_summary),
+        _run(reporting.get_summary),
+        _run(ai.get_summary),
+        _run(tip.get_summary),
+        _run(soar.get_summary),
+        _run(compliance.get_summary),
+    )
+    y = await _run(yara_scan.get_summary)
     return {
         "timestamp": datetime.now().isoformat(),
         "modules": {
-            "kernel": kernel.get_summary(),
-            "memory": memory.get_summary(),
-            "network": network.get_summary(),
-            "fim": fim.get_summary(),
-            "edr": edr.get_summary(),
-            "siem": siem.get_summary(),
-            "vuln": vuln.get_summary(),
-            "ir": ir.get_summary(),
-            "sandbox": sandbox.get_summary(),
-            "hardening": hardening.get_summary(),
-            "cloud": cloud.get_summary(),
-            "reporting": reporting.get_summary(),
-            "ai": ai.get_summary(),
-            "tip": tip.get_summary(),
-            "soar": soar.get_summary(),
-            "compliance": compliance.get_summary(),
-            "yara": yara_scan.get_summary()
+            "kernel": k, "memory": m, "network": n, "fim": f,
+            "edr": e, "siem": s, "vuln": v, "ir": i,
+            "sandbox": sa, "hardening": h, "cloud": c, "reporting": r,
+            "ai": a, "tip": t, "soar": so, "compliance": co, "yara": y,
         }
     }
 
 @app.get("/api/kernel/rootkits")
 async def kernel_rootkits():
-    return {"rootkits": kernel.detect_rootkits()}
+    return {"rootkits": await _run(kernel.detect_rootkits)}
 
 @app.get("/api/memory/anomalies")
 async def memory_anomalies():
-    return {"anomalies": memory.analyze_memory_anomalies()}
+    return {"anomalies": await _run(memory.analyze_memory_anomalies)}
 
 @app.get("/api/network/connections")
 async def network_connections():
-    return {"connections": network.get_active_connections()}
+    return {"connections": await _run(network.get_active_connections)}
 
 @app.get("/api/fim/ransomware")
 async def fim_ransomware():
-    return {"indicators": fim.detect_ransomware_behavior()}
+    return {"indicators": await _run(fim.detect_ransomware_behavior)}
 
 @app.get("/api/edr/processes")
 async def edr_processes():
-    return {"processes": edr.get_process_tree()}
+    return {"processes": await _run(edr.get_process_tree)}
 
 @app.get("/api/siem/events")
 async def siem_events():
-    logs = siem.collect_logs(limit=100)
+    logs = await _run(siem.collect_logs, limit=100)
     return {"events": logs, "count": len(logs)}
 
 @app.get("/api/vuln/scan")
 async def vuln_scan():
+    k, p, e, c = await asyncio.gather(
+        _run(vuln.scan_kernel_cves),
+        _run(vuln.scan_package_cves),
+        _run(vuln.detect_privilege_escalation_paths),
+        _run(vuln.check_cis_benchmarks),
+    )
     return {
-        "kernel_cves":   vuln.scan_kernel_cves(),
-        "package_cves":  vuln.scan_package_cves(),
-        "privesc_paths": vuln.detect_privilege_escalation_paths(),
-        "cis_issues":    vuln.check_cis_benchmarks(),
+        "kernel_cves":   k,
+        "package_cves":  p,
+        "privesc_paths": e,
+        "cis_issues":    c,
     }
 
 @app.get("/api/ir/evidence")
 async def ir_evidence():
-    return {"evidence": ir.chain_of_custody, "summary": ir.get_summary()}
+    s = await _run(ir.get_summary)
+    return {"evidence": ir.chain_of_custody, "summary": s}
 
 @app.get("/api/sandbox/analysis")
 async def sandbox_analysis():
-    return {"summary": sandbox.get_summary()}
+    return {"summary": await _run(sandbox.get_summary)}
 
 @app.get("/api/hardening/status")
 async def hardening_status():
+    s, l, r = await asyncio.gather(
+        _run(hardening.get_summary),
+        _run(hardening.enable_apparmor_selinux),
+        _run(hardening.detect_rootkits),
+    )
     return {
-        "summary":  hardening.get_summary(),
-        "lsm":      hardening.enable_apparmor_selinux(),
-        "rootkits": hardening.detect_rootkits(),
+        "summary":  s,
+        "lsm":      l,
+        "rootkits": r,
     }
 
 @app.get("/api/cloud/containers")
 async def cloud_containers():
-    return {"containers": cloud.scan_docker_containers()}
+    return {"containers": await _run(cloud.scan_docker_containers)}
 
 @app.get("/api/reporting/compliance")
 async def reporting_compliance():
-    return {fw: reporting.generate_compliance_report(fw)
-            for fw in ["pci_dss", "hipaa", "cis", "nist"]}
+    p, h, c, n = await asyncio.gather(
+        _run(reporting.generate_compliance_report, "pci_dss"),
+        _run(reporting.generate_compliance_report, "hipaa"),
+        _run(reporting.generate_compliance_report, "cis"),
+        _run(reporting.generate_compliance_report, "nist"),
+    )
+    return {"pci_dss": p, "hipaa": h, "cis": c, "nist": n}
 
 @app.get("/api/ai/analyze")
 async def ai_analyze(threat_type: str = "ransomware", threat_id: str = "auto"):
-    return ai.analyze_threat({"id": threat_id, "type": threat_type})
+    return await _run(ai.analyze_threat, {"id": threat_id, "type": threat_type})
 
 @app.get("/api/ai/query")
 async def ai_query(q: str):
-    return ai.natural_language_query(q)
+    return await _run(ai.natural_language_query, q)
 
 @app.get("/metrics")
 async def get_metrics():
-    return Response(content=metrics.export_prometheus_format(), media_type="text/plain")
+    data = await _run(metrics.export_prometheus_format)
+    return Response(content=data, media_type="text/plain")
 
 @app.get("/api/tip/summary")
 async def tip_summary():
-    return tip.get_summary()
+    return await _run(tip.get_summary)
 
 @app.post("/api/tip/sync")
 async def tip_sync():
-    return tip.fetch_external_iocs()
+    return await _run(tip.fetch_external_iocs)
 
 @app.get("/api/soar/summary")
 async def soar_summary():
-    return soar.get_summary()
+    return await _run(soar.get_summary)
 
 @app.post("/api/soar/execute")
 async def soar_execute(playbook: str, context: Dict = None):
-    return soar.execute_playbook(playbook, context or {})
+    return await _run(soar.execute_playbook, playbook, context or {})
 
 @app.get("/api/compliance/summary")
 async def compliance_summary():
-    return compliance.get_summary()
+    return await _run(compliance.get_summary)
 
 @app.post("/api/compliance/audit")
 async def compliance_audit():
-    return compliance.run_compliance_audit()
+    return await _run(compliance.run_compliance_audit)
 
 @app.get("/api/yara/summary")
 async def yara_summary():
-    return yara_scan.get_summary()
+    return await _run(yara_scan.get_summary)
 
 @app.post("/api/yara/scan")
 async def yara_scan_file(path: str):
-    return yara_scan.scan_file(path)
+    return await _run(yara_scan.scan_file, path)
 
 @app.post("/api/ai/quantize")
 async def ai_quantize(path: str, method: str = "Q4_K_M"):
-    return ai.quantize_model(path, method)
+    return await _run(ai.quantize_model, path, method)
 
 @app.get("/api/security/mtls-status")
 async def mtls_status():
@@ -241,14 +267,14 @@ async def ai_action(request: Request):
     data = await request.json()
     threat_type = data.get("threat_type")
     context = data.get("context", {})
-    return ai.take_autonomous_action(threat_type, context)
+    return await _run(ai.take_autonomous_action, threat_type, context)
 
 @app.post("/api/ai/feedback")
 async def ai_feedback(request: Request):
     data = await request.json()
     action_id = data.get("action_id")
     accepted = data.get("accepted", False)
-    ai.store_feedback(action_id, accepted)
+    await _run(ai.store_feedback, action_id, accepted)
     return {"status": "feedback_stored"}
 
 @app.get("/api/docs")
@@ -299,4 +325,5 @@ if __name__ == "__main__":
     if os.path.exists(web_dir):
         app.mount("/", StaticFiles(directory=web_dir, html=True), name="web")
     
-    uvicorn.run(app, host="0.0.0.0", port=8443, **ssl_kwargs)
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    uvicorn.run("api.server:app", host="0.0.0.0", port=8443, **ssl_kwargs)
