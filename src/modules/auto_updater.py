@@ -1,5 +1,4 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """
 Auto-Updater Module: Checks for new rule sets and Sigma updates

@@ -1,5 +1,4 @@
 # By🇭🇷PhonkAlphabet
-# By🇭🇷PhonkAlphabet
 #!/usr/bin/env python3
 """Module 11: Cloud & Container Security"""
 import subprocess, json, logging
